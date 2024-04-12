@@ -69,3 +69,36 @@ def sum_games(games):
 games = format_games_arr(raw_games) # format games
 possible_games_arr = possible_games(games, limit) # get all possible ids
 print(sum_games(possible_games_arr)) # print sum of all possible ids
+
+# gets the fewest possible cubes for each game
+def fewest_cubes(games):
+    fewest_cubes = []
+
+    for game_id in games:
+        cubes = {"red": 1, "blue": 1, "green": 1}
+        for set in games[game_id]:
+            for color in set:
+                if int(set[color]) > cubes[color]:
+                    cubes[color] = int(set[color])
+        
+        fewest_cubes.append(list(cubes.values()))
+
+    return fewest_cubes
+
+# builds array of the power of each set of cubes
+def power_of_cubes(cubes):
+    powers = []
+    for vals in cubes:
+        power = 1
+        for val in vals:
+            power *= val
+        powers.append(power)
+
+    return powers
+        
+
+fewest_cubes_arr = fewest_cubes(games) # get fewest cubes
+fewest_cubes_powers = power_of_cubes(fewest_cubes_arr) # get powers for each set
+powers_sum = sum_games(fewest_cubes_powers) # sum the powers
+
+print(powers_sum)
