@@ -13,7 +13,7 @@ def shape_scratch_card_data(data):
         card_id = card_id.split()[1]  # "Card 12" -> "12"
 
         # add shaped card to cards dictionary
-        cards[card_id] = {
+        cards[int(card_id)] = {
             "win_nums": set(win_nums.split()),
             "play_nums": set(play_nums.split()),
         }
@@ -50,7 +50,35 @@ def score_cards(cards):
     return total_points
 
 
+# count cards, duplicating ahead n times for n wins on current card
+def count_cards(cards):
+    card_count = 0
+    dupes = {}
+
+    for c_id, card in cards.items():
+        win_count = winning_numbers_count(card["win_nums"], card["play_nums"])
+
+        # dupes of this card plus this card
+        instances = dupes.get(c_id, 0) + 1
+
+        for _ in range(instances):  # for each instance of the current card
+            for n in range(win_count):  # for each winning card
+                i = n + 1
+
+                # add a duplicate of card i spaces ahead
+                if dupes.get(c_id + i):
+                    dupes[c_id + i] += 1
+                else:
+                    dupes[c_id + i] = 1
+
+            card_count += 1
+
+    return card_count
+
+
 scratch_cards = shape_scratch_card_data(scratch_cards_data)  # shaped data
 SCRATCH_CARDS_POINTS = score_cards(scratch_cards)  # total points
+SCRATCH_CARDS_COUNT = count_cards(scratch_cards)  # count cards
 
-print(SCRATCH_CARDS_POINTS)
+print("points: ", SCRATCH_CARDS_POINTS)
+print("card count: ", SCRATCH_CARDS_COUNT)
