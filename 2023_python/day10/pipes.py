@@ -1,4 +1,3 @@
-# direction constants
 N = "N"
 E = "E"
 S = "S"
@@ -7,70 +6,61 @@ W = "W"
 
 def parse_data(data):
     maze = []
-
     start = None
-    x = 0
+    row = 0
 
-    for row in data:
-        row = row.strip()
-        row = list(row)
-        maze.append(row)
+    for line in data:
+        line = line.strip()
+        line = list(line)
+        maze.append(line)
+
+        if start:
+            continue
 
         # get starting cords
-        if not start:
-            y = 0
-            for c in row:
-                if c == "S":
-                    start = [x, y]
-                else:
-                    y += 1
-            x += 1
+        col = 0
+        for char in line:
+            if char == "S":
+                start = [row, col]
+            col += 1
+
+        row += 1
 
     return maze, start
 
 
 def get_furthest_distance(maze, start):
     steps = 0
-
-    pipe = "S"
+    cur_pipe = "S"
     cords = start
-    prev = None
+    prev_dir = None
 
-    while pipe != "S" or steps == 0:
-        if steps == 20000:
-            break  # TODO DELETE
+    while cur_pipe != "S" or steps == 0:
 
-        # check current pipe possible directions
-        for d in pipes_dict[pipe]:
-            # don't check direction we came from
-            if prev == d:
+        for direction in pipe_directions[cur_pipe]:
+
+            if prev_dir == direction:
                 continue
-            # get cords of cell in provided direction
-            x, y = traverse(d, cords)
-            # ensure the cords are within the matrix
-            if is_in_matrix(maze, [x, y]):
-                cell = maze[x][y]
-                if cell != ".":
-                    connecting_dir = pipe_match[d]
-                    if connecting_dir in pipes_dict[cell]:
-                        pipe = cell
-                        cords = [x, y]
-                        prev = connecting_dir
-                        break
+
+            # get cords of next cell
+            x, y = traverse(direction, cords)
+            cell = maze[x][y]
+            if cell == ".":
+                continue
+
+            # check if the next cell has a connecting pipe
+            connecting_dir = pipe_match[direction]
+            if connecting_dir not in pipe_directions[cell]:
+                continue
+
+            prev_dir = connecting_dir
+            cur_pipe = cell
+            cords = [x, y]
+            break
 
         steps += 1
 
     return int(steps / 2)
-
-
-def is_in_matrix(maze, cords):
-    x_max = len(maze)
-    y_max = len(maze[0])
-
-    x = -1 < cords[0] < x_max
-    y = -1 < cords[1] < y_max
-
-    return x & y
 
 
 def traverse(direction, cords):
@@ -92,7 +82,7 @@ def traverse(direction, cords):
         return cords
 
 
-pipes_dict = {
+pipe_directions = {
     "S": {N, E, S, W},
     "|": {N, S},
     "-": {E, W},
@@ -110,16 +100,10 @@ pipe_match = {
 }
 
 
-with open("2023_python/day10/input.txt", encoding="utf-8") as file:
+with open("2023_python/day10/example.txt", encoding="utf-8") as file:
     lines = file.readlines()
     pipes_maze, start_cords = parse_data(lines)
 
 DISTANCE = get_furthest_distance(pipes_maze, start_cords)
 
 print(DISTANCE)
-
-# print(pipes_dict)
-# print("----")
-# print(pipes_maze)
-# print("----")
-# print(start_cords)
