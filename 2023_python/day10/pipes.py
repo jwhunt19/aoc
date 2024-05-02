@@ -1,9 +1,11 @@
+# cardinal direction constants
 N = "N"
 E = "E"
 S = "S"
 W = "W"
 
 
+# parse data for maze and starting point cords
 def parse_data(data):
     maze = []
     start = None
@@ -29,13 +31,16 @@ def parse_data(data):
     return maze, start
 
 
-def get_furthest_distance(maze, start):
+# traverse the maze and returns the furthest distance and cords of the shape
+def travel_maze_loop(maze, start):
     steps = 0
     cur_pipe = "S"
     cords = start
     prev_dir = None
+    shape = []
 
     while cur_pipe != "S" or steps == 0:
+        shape.append(cords.copy())
 
         for direction in pipe_directions[cur_pipe]:
 
@@ -60,9 +65,10 @@ def get_furthest_distance(maze, start):
 
         steps += 1
 
-    return int(steps / 2)
+    return int(steps / 2), shape
 
 
+# return next cell in given direction
 def traverse(direction, cords):
     new_cords = cords.copy()
 
@@ -82,6 +88,31 @@ def traverse(direction, cords):
         return cords
 
 
+# for getting area of maze with coordinates of its vertices
+def shoelace_formula(shape):
+    x_sum = 0
+    y_sum = 0
+
+    for i, cord in enumerate(shape):
+        x1, y1 = cord
+        x2, y2 = None, None
+        if i == len(shape) - 1:
+            x2, y2 = shape[0]
+        else:
+            x2, y2 = shape[i + 1]
+
+        x_sum += x1 * y2
+        y_sum += y1 * x2
+
+    return abs((x_sum - y_sum) / 2)
+
+
+# get points in maze using area and boundary length
+def picks_theorem(area, boundary):
+    return area - boundary / 2 + 1
+
+
+# compatible directions for each pipe
 pipe_directions = {
     "S": {N, E, S, W},
     "|": {N, S},
@@ -92,6 +123,7 @@ pipe_directions = {
     "F": {E, S},
 }
 
+# match connecting pipe directions
 pipe_match = {
     N: S,
     E: W,
@@ -99,11 +131,17 @@ pipe_match = {
     W: E,
 }
 
-
-with open("2023_python/day10/example.txt", encoding="utf-8") as file:
+# open input file
+with open("2023_python/day10/input.txt", encoding="utf-8") as file:
     lines = file.readlines()
     pipes_maze, start_cords = parse_data(lines)
 
-DISTANCE = get_furthest_distance(pipes_maze, start_cords)
+# get furthest distance and shape of maze loop
+DISTANCE, SHAPE = travel_maze_loop(pipes_maze, start_cords)
 
+# get area and amount of inner points of maze loop
+AREA = shoelace_formula(SHAPE)
+INNER_POINTS = picks_theorem(AREA, len(SHAPE))
+
+print(INNER_POINTS)
 print(DISTANCE)
