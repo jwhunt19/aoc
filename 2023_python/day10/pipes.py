@@ -9,9 +9,8 @@ W = "W"
 def parse_data(data):
     maze = []
     start = None
-    row = 0
 
-    for line in data:
+    for row, line in enumerate(data):
         line = line.strip()
         line = list(line)
         maze.append(line)
@@ -20,13 +19,8 @@ def parse_data(data):
             continue
 
         # get starting cords
-        col = 0
-        for char in line:
-            if char == "S":
-                start = [row, col]
-            col += 1
-
-        row += 1
+        if "S" in line:
+            start = [row, line.index("S")]
 
     return maze, start
 
@@ -40,7 +34,7 @@ def travel_maze_loop(maze, start):
     shape = []
 
     while cur_pipe != "S" or steps == 0:
-        shape.append(cords.copy())
+        shape.append(cords)
 
         for direction in pipe_directions[cur_pipe]:
 
@@ -90,16 +84,13 @@ def traverse(direction, cords):
 
 # for getting area of maze with coordinates of its vertices
 def shoelace_formula(shape):
+    n = len(shape)
     x_sum = 0
     y_sum = 0
 
-    for i, cord in enumerate(shape):
-        x1, y1 = cord
-        x2, y2 = None, None
-        if i == len(shape) - 1:
-            x2, y2 = shape[0]
-        else:
-            x2, y2 = shape[i + 1]
+    for i in range(n):
+        x1, y1 = shape[i]
+        x2, y2 = shape[(i + 1) % n]
 
         x_sum += x1 * y2
         y_sum += y1 * x2
