@@ -6,6 +6,11 @@ def parse_data(line: str) -> Tuple[str, List[int]]:
     spring_counts = [int(x) for x in spring_counts.split(",")]
     spring_counts.reverse()
 
+    # Part 2 modification (unfold)
+    springs = "?".join([springs] * 5)
+    spring_counts = spring_counts * 5
+    print(spring_counts)
+
     return springs, spring_counts
 
 
@@ -72,7 +77,7 @@ def recurse_springs(
 
 possible_springs = []
 
-with open("2023_python/day12/input.txt", "r") as file:
+with open("2023_python/day12/example.txt", "r") as file:
     lines = file.readlines()
     for line in lines:
         springs_row, spring_count_list = parse_data(line)
