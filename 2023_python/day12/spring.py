@@ -1,88 +1,65 @@
-from typing import List, Tuple, Dict
-
-
-def parse_data(line: str) -> Tuple[str, List[int]]:
-    springs, spring_counts = line.split()
-    spring_counts = [int(x) for x in spring_counts.split(",")]
-    spring_counts.reverse()
+def parse_data(line: str) -> tuple[str, list[int]]:
+    springs, groups = line.split()
+    groups = [int(x) for x in groups.split(",")]
+    groups = tuple(groups)
 
     # Part 2 modification (unfold)
     springs = "?".join([springs] * 5)
-    spring_counts = spring_counts * 5
-    print(spring_counts)
+    groups = groups * 5
 
-    return springs, spring_counts
+    return springs, groups
 
 
 def recurse_springs(
-    springs: str,
-    counts: List[int],
-    i: int = 0,
-    cur_group_count: int = 0,
-    skip: bool = False,
+    springs: str, groups: tuple[int], memo: dict[tuple[str, tuple[int]]] = {}
 ) -> int:
-    counts_copy = counts.copy()
 
-    # End and clear check - return 1
-    if len(counts_copy) == 0:
-        if "#" in springs[i:]:
+    s_key = (springs, groups)
+    if s_key in memo:
+        return memo[s_key]
+
+    # If all groups accounted for and no more # left, return 1 valid arrangement
+    if len(groups) == 0:
+        if "#" in springs:
             return 0
-        
+
         return 1
 
-    # End check of iteration, final check
-    if i >= len(springs):
-        if cur_group_count == counts_copy[-1]:
-            counts_copy.pop()
-            if len(counts_copy) == 0:
-                return 1
-        return 0
-
-    # check if current group is too large or valid
-    if springs[i] != "#":
-        if cur_group_count > counts_copy[-1]:
-            return 0
-        
-        elif cur_group_count == counts_copy[-1]:
-            counts_copy.pop()
-            cur_group_count = 0
-            skip = True
-
-    # if we hit a dot and the current group doesn't work, return 0
-    if springs[i] == ".":
-        if cur_group_count > 0 and cur_group_count < counts_copy[-1]:
+    # If end of springs str and all groups accounted for, return 1 valid arrangment
+    if len(springs) == 0:
+        if len(groups) != 0:
             return 0
 
-        i += 1
-        return recurse_springs(springs, counts_copy, i, cur_group_count)
+        return 1
 
-    # if we hit #, iterate and move on 
-    elif springs[i] == "#":
-        cur_group_count += 1
+    result = 0
 
-        return recurse_springs(springs, counts_copy, i + 1, cur_group_count)
+    # If char isn't #, recurse treating ?'s as a dot .
+    if springs[0] != "#":
+        dot_key = (springs[1:], groups)
+        memo[dot_key] = recurse_springs(springs[1:], groups, memo)
+        result += memo[dot_key]
 
-    # if ?, recurse with each possibility (. or #)
-    elif springs[i] == "?":
-        p_springs = springs[:i] + "." + springs[i + 1 :]
-        if skip:
-            return recurse_springs(p_springs, counts_copy, i, cur_group_count)
-        else:
-            s_springs = springs[:i] + "#" + springs[i + 1 :]
+    # if char is # or ?, check for valid group match and recurse
+    if springs[0] == "#" or springs[0] == "?":
+        ls = len(springs)  # len of springs
+        g = groups[0]  # group
+        if g <= ls and "." not in springs[:g] and (ls == g or springs[g] != "#"):
+            spring_key = (springs[g + 1 :], groups[1:])
+            memo[spring_key] = recurse_springs(springs[g + 1 :], groups[1:], memo)
+            result += memo[spring_key]
 
-            return recurse_springs(
-                p_springs, counts_copy, i, cur_group_count
-            ) + recurse_springs(s_springs, counts_copy, i, cur_group_count)
+    return result
 
 
-possible_springs = []
+possible_springs = 0
 
-with open("2023_python/day12/example.txt", "r") as file:
+with open("2023_python/day12/input.txt", encoding="utf-8") as file:
     lines = file.readlines()
     for line in lines:
-        springs_row, spring_count_list = parse_data(line)
-        n = recurse_springs(springs_row, spring_count_list)
+        springs_str, spring_groups = parse_data(line)
 
-        possible_springs.append(n)
+        possible_springs += recurse_springs(springs_str, spring_groups)
 
-print(sum(possible_springs))
+
+print(possible_springs)
